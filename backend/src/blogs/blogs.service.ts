@@ -14,7 +14,7 @@ import { Queue } from 'bullmq';
 export class BlogsService {
   constructor(
     private readonly prisma: PrismaService,
-    @InjectQueue('blog-queue') private blogQueue: Queue,
+    @InjectQueue('blog-summary') private blogQueue: Queue,
   ) {}
 
   async getPublicFeed(page: number, limit: number) {
