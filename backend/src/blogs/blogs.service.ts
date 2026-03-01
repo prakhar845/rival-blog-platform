@@ -1,27 +1,25 @@
 import {
   Injectable,
   NotFoundException,
-  ForbiddenException,
-  BadRequestException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
-import { Prisma } from '@prisma/client';
+
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 
 @Injectable()
 export class BlogsService {
   constructor(
-    private prisma: PrismaService,
-    @InjectQueue('blog-summary') private summaryQueue: Queue,
+    private readonly prisma: PrismaService,
+    @InjectQueue('blog-queue') private blogQueue: Queue,
   ) {}
 
-  async getPublicFeed(page: number = 1, limit: number = 10) {
+  async getPublicFeed(page: number, limit: number) {
     const skip = (page - 1) * limit;
-
-    const [blogs, total] = await Promise.all([
+    const [data, total] = await Promise.all([
       this.prisma.blog.findMany({
         where: { isPublished: true },
         skip,
@@ -32,13 +30,11 @@ export class BlogsService {
           _count: { select: { likes: true, comments: true } },
         },
       }),
-      this.prisma.blog.count({
-        where: { isPublished: true },
-      }),
+      this.prisma.blog.count({ where: { isPublished: true } }),
     ]);
 
     return {
-      data: blogs,
+      data,
       meta: {
         total,
         page,
@@ -48,32 +44,39 @@ export class BlogsService {
     };
   }
 
-  async findOneBySlug(slug: string) {
-    const blog = await this.prisma.blog.findUnique({
-      where: { slug, isPublished: true },
+  async getPublicBlogBySlug(slugOrId: string) {
+    const blog = await this.prisma.blog.findFirst({
+      where: {
+        OR: [{ slug: slugOrId }, { id: slugOrId }],
+        isPublished: true,
+      },
       include: {
         user: { select: { email: true } },
         _count: { select: { likes: true, comments: true } },
       },
     });
 
-    if (!blog) throw new NotFoundException('Blog not found.');
+    if (!blog) {
+      throw new NotFoundException('Blog post not found or not published.');
+    }
+
     return blog;
   }
 
-  async create(userId: string, dto: CreateBlogDto) {
-    const slug =
-      dto.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Date.now();
+  async create(createBlogDto: CreateBlogDto, userId: string) {
+    const baseSlug = createBlogDto.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '');
+    const uniqueSlug = `${baseSlug}-${Date.now()}`;
 
     const blog = await this.prisma.blog.create({
-      data: { ...dto, slug, userId },
+      data: {
+        ...createBlogDto,
+        slug: uniqueSlug,
+        userId,
+      },
     });
-
-    await this.summaryQueue.add('generate-summary', {
-      blogId: blog.id,
-      content: blog.content,
-    });
-
     return blog;
   }
 
@@ -87,84 +90,43 @@ export class BlogsService {
     });
   }
 
-  async update(userId: string, blogId: string, dto: UpdateBlogDto) {
-    const blog = await this.prisma.blog.findUnique({ where: { id: blogId } });
+  async update(id: string, updateBlogDto: UpdateBlogDto, userId: string) {
+    const blog = await this.prisma.blog.findUnique({ where: { id } });
     if (!blog) throw new NotFoundException('Blog not found.');
     if (blog.userId !== userId)
-      throw new ForbiddenException('Not authorized to edit this post.');
+      throw new UnauthorizedException('You can only edit your own posts.');
 
     return this.prisma.blog.update({
-      where: { id: blogId },
-      data: dto,
+      where: { id },
+      data: updateBlogDto,
     });
   }
 
-  async remove(userId: string, blogId: string) {
-    const blog = await this.prisma.blog.findUnique({ where: { id: blogId } });
+  async remove(id: string, userId: string) {
+    const blog = await this.prisma.blog.findUnique({ where: { id } });
     if (!blog) throw new NotFoundException('Blog not found.');
     if (blog.userId !== userId)
-      throw new ForbiddenException('Not authorized to delete this post.');
+      throw new UnauthorizedException('You can only delete your own posts.');
 
-    return this.prisma.blog.delete({ where: { id: blogId } });
+    return this.prisma.blog.delete({
+      where: { id },
+    });
   }
 
-  async likeBlog(userId: string, blogId: string) {
-    const blog = await this.prisma.blog.findUnique({ where: { id: blogId } });
+  async likeBlog(id: string, userId: string) {
+    const blog = await this.prisma.blog.findUnique({ where: { id } });
     if (!blog) throw new NotFoundException('Blog not found.');
 
-    try {
-      await this.prisma.like.create({
-        data: { userId, blogId },
-      });
-    } catch (error) {
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new BadRequestException('You already liked this post.');
-      }
-      throw error;
+    const existingLike = await this.prisma.like.findFirst({
+      where: { blogId: id, userId },
+    });
+
+    if (existingLike) {
+      await this.prisma.like.delete({ where: { id: existingLike.id } });
+      return { message: 'Unliked successfully' };
+    } else {
+      await this.prisma.like.create({ data: { blogId: id, userId } });
+      return { message: 'Liked successfully' };
     }
-
-    const likeCount = await this.prisma.like.count({ where: { blogId } });
-    return { likeCount };
-  }
-
-  async unlikeBlog(userId: string, blogId: string) {
-    try {
-      await this.prisma.like.delete({
-        where: { userId_blogId: { userId, blogId } },
-      });
-    } catch {
-      throw new BadRequestException('You have not liked this post.');
-    }
-
-    const likeCount = await this.prisma.like.count({ where: { blogId } });
-    return { likeCount };
-  }
-
-  async checkLikeStatus(userId: string, blogId: string) {
-    const like = await this.prisma.like.findUnique({
-      where: { userId_blogId: { userId, blogId } },
-    });
-    return { isLiked: !!like };
-  }
-
-  async addComment(userId: string, blogId: string, content: string) {
-    const blog = await this.prisma.blog.findUnique({ where: { id: blogId } });
-    if (!blog) throw new NotFoundException('Blog not found.');
-
-    return this.prisma.comment.create({
-      data: { content, userId, blogId },
-      include: { user: { select: { email: true } } },
-    });
-  }
-
-  async getComments(blogId: string) {
-    return this.prisma.comment.findMany({
-      where: { blogId },
-      orderBy: { createdAt: 'desc' },
-      include: { user: { select: { email: true } } },
-    });
   }
 }
