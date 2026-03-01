@@ -8,8 +8,8 @@
 
 A modern, full-stack blogging platform built for speed, scalability, and exceptional user experience. 
 
-**Live Demo:** [Insert Vercel URL Here]  
-**Backend API:** [Insert Render URL Here]
+**Live Demo:** https://rival-blog-platform-ochre.vercel.app
+**Backend API:** https://rival-blog-api.onrender.com
 
 
 ## ✨ Key Features
