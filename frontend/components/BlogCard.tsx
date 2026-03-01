@@ -39,7 +39,7 @@ export default function BlogCard({ blog, isDashboard, onTogglePublish, onDelete,
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token && !isDashboard) {
-      fetch(`http://localhost:3000/blogs/${blog.id}/like`, {
+      fetch(`${API_URL}/blogs/${blog.id}/like`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())

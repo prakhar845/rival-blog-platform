@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 interface Blog {
   id: string;
@@ -31,7 +32,7 @@ export default function EditPost() {
 
     const fetchBlog = async () => {
       try {
-        const res = await fetch("http://localhost:3000/blogs/me", {
+        const res = await fetch(`${API_URL}/blogs/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -66,7 +67,7 @@ export default function EditPost() {
     const token = localStorage.getItem("token");
 
     try {
-      const res = await fetch(`http://localhost:3000/blogs/${id}`, {
+      const res = await fetch(`${API_URL}/blogs/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
