@@ -138,10 +138,20 @@ The application will be available at `http://localhost:3001`.
 2. **Decoupled Client-Server:** I explicitly separated the Next.js frontend and NestJS backend. This enables the frontend to be hosted on an edge network (like Vercel) for rapid asset delivery, while the backend scales independently on a cloud provider (like Render).
 3. **Prisma ORM:** Chosen for its strict end-to-end type safety and highly readable schema modeling, which minimizes runtime database errors and speeds up development.
 
+
 ### Trade-offs
 
 * **REST API vs. GraphQL:** I opted for a standard REST API over GraphQL. Given the straightforward CRUD nature of a blogging platform, REST was faster to implement, easier to cache at the edge, and reduced unnecessary overhead payload.
 * **JWTs in LocalStorage vs. HttpOnly Cookies:** For this MVP iteration, JWTs are stored in LocalStorage for simplicity in a decoupled architecture. In a strict production environment, migrating to HttpOnly cookies would provide stronger protection against XSS attacks.
+
+
+## 🔮 What I Would Improve
+
+If given more time, I would implement the following enhancements:
+1. **Rate Limiting:** Integrate `@nestjs/throttler` to protect the public feed and authentication endpoints against brute-force/DDoS attacks.
+2. **Enhanced Security:** Move the JWT from `localStorage` to strict, cross-domain `HttpOnly` cookies, and implement a short-lived Access Token + rotating Refresh Token strategy.
+3. **Structured Logging:** Replace standard console logs with a structured logger like `Pino` or `Winston` to allow for proper log aggregation and monitoring in production environments.
+4. **Advanced Pagination:** Add infinite-scroll cursor pagination for comments and dashboard items (currently, pagination is only implemented on the public feed).
 
 
 ## 📈 Scaling to 1 Million Users

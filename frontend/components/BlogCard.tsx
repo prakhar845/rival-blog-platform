@@ -7,28 +7,24 @@ import { useRouter } from "next/navigation";
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 
-interface Blog {
+export interface Blog {
   id: string;
   title: string;
   slug?: string;
-  summary?: string;
-  content?: string;
-  createdAt: string | Date;
-  isPublished?: boolean;
-  user?: {
-    email: string;
-  };
-  _count?: {
-    likes: number;
-  };
+  content: string;
+  summary?: string | null;
+  isPublished: boolean;
+  createdAt: string;
+  user?: { email: string };
+  _count?: { likes: number; comments: number };
 }
 
 interface BlogCardProps {
   blog: Blog; 
-  isDashboard: boolean;
-  onTogglePublish?: (id: string, status: boolean) => void;
+  isDashboard?: boolean;
   onDelete?: (id: string) => void;
-  onEdit?: (id: string) => void;
+  onTogglePublish?: (id: string, status: boolean) => void;
+  onEdit?: (blog: Blog) => void;
 }
 
 export default function BlogCard({ blog, isDashboard, onTogglePublish, onDelete, onEdit }: BlogCardProps) {
@@ -105,10 +101,13 @@ export default function BlogCard({ blog, isDashboard, onTogglePublish, onDelete,
         ) : (
           <div className="flex gap-3">
             {onEdit && (
-              <button onClick={() => onEdit(blog.id)} className="px-3 py-1 text-sm font-medium bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100">
-                Edit
-              </button>
-            )}
+            <button
+              onClick={() => onEdit(blog)}
+              className="px-3 py-1 text-sm font-bold bg-blue-50 text-blue-600 rounded hover:bg-blue-100 transition"
+            >
+              Edit
+            </button>
+          )}
             {onTogglePublish && (
               <button 
                 onClick={() => onTogglePublish(blog.id, blog.isPublished ?? false)} 
