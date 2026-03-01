@@ -25,12 +25,20 @@ import { BullModule } from '@nestjs/bullmq';
 
     BullModule.forRootAsync({
       imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => {
+        const host = configService.get<string>('REDIS_HOST', 'localhost');
+        const port = configService.get<number>('REDIS_PORT', 6379);
+        const password = configService.get<string>('REDIS_PASSWORD');
 
-      useFactory: (configService: ConfigService) => ({
-        connection: {
-          url: configService.get('REDIS_URL'),
-        },
-      }),
+        return {
+          connection: {
+            host: host,
+            port: port,
+            password: password,
+            tls: host !== 'localhost' ? {} : undefined,
+          },
+        };
+      },
       inject: [ConfigService],
     }),
   ],
