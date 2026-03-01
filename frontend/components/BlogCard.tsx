@@ -38,8 +38,6 @@ export default function BlogCard({ blog, isDashboard, onTogglePublish, onDelete,
 
   const handleLike = async () => {
     const token = localStorage.getItem("token");
-    
-    
     if (!token) {
       alert("You must be logged in to like a post!");
       router.push("/login");
@@ -55,11 +53,13 @@ export default function BlogCard({ blog, isDashboard, onTogglePublish, onDelete,
       if (res.ok) {
         const data = await res.json();
         
-        if (data.message === 'Unliked successfully') {
+        if (data.message && data.message.toLowerCase().includes('unliked')) {
           setLikes((prev: number) => Math.max(0, prev - 1));
         } else {
           setLikes((prev: number) => prev + 1);
         }
+      } else {
+        console.error("Backend refused the toggle. You might need to refresh.");
       }
     } catch (error) {
       console.error("Failed to toggle like:", error);
