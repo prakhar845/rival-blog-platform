@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import BlogCard from "../components/BlogCard";
 
-
 interface Blog {
   id: string;
   title: string;
@@ -23,18 +22,25 @@ export default function PublicFeed() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const limit = 5; 
+  const limit = 5;
+  
+  // Safely extract the API URL from the environment variables
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
   useEffect(() => {
     const fetchFeed = async () => {
       setLoading(true);
       try {
+        // 1. Using API_URL instead of hardcoded localhost
+        // 2. Added cache: 'no-store' to ensure we always get fresh data
+        const res = await fetch(
+          `${API_URL}/blogs/public/feed?page=${currentPage}&limit=${limit}`, 
+          { cache: 'no-store' }
+        );
         
-        const res = await fetch(`http://localhost:3000/blogs/public/feed?page=${currentPage}&limit=${limit}`);
         if (!res.ok) throw new Error("Failed to fetch public feed.");
 
         const json = await res.json();
-        
         
         setBlogs(json.data);
         setTotalPages(json.meta.totalPages);
@@ -46,7 +52,7 @@ export default function PublicFeed() {
     };
 
     fetchFeed();
-  }, [currentPage]); 
+  }, [currentPage, API_URL]); 
 
   if (loading) {
     return (
@@ -80,7 +86,6 @@ export default function PublicFeed() {
           </div>
         )}
 
-        {}
         {totalPages > 0 && (
           <div className="flex justify-center items-center gap-6 mt-12">
             <button
