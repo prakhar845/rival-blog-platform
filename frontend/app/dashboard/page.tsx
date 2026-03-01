@@ -28,7 +28,6 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
   
-
   const fetchMyBlogs = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -36,8 +35,10 @@ export default function DashboardPage() {
       return;
     }
     try {
+      // FIXED: cache is now a top-level property of the fetch options
       const res = await fetch(`${API_URL}/blogs/me`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        cache: 'no-store' 
       });
       if (res.ok) {
         const data = await res.json();
@@ -85,15 +86,12 @@ export default function DashboardPage() {
     }
   };
 
-  
   if (isLoading) return <Spinner />;
 
   return (
     <div className="max-w-4xl mx-auto p-8">
       <div className="flex justify-between items-center mb-8 border-b pb-4">
         <h1 className="text-3xl font-extrabold text-gray-900">My Dashboard</h1>
-        
-        {}
       </div>
       
       <div className="flex flex-col gap-6">
