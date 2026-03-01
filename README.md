@@ -19,7 +19,8 @@ A modern, full-stack blogging platform built for speed, scalability, and excepti
 * **Author Dashboard:** A protected private route where users can manage their content (Create, Read, Update, Delete) and toggle visibility (Publish/Unpublish).
 * **Interactive Engagement:** Logged-in users can "Like" posts and leave real-time comments.
 * **Premium UX/UI:** Built with Tailwind CSS v4, featuring crisp typography, dynamic reading time calculations, skeleton loaders, and `react-hot-toast` notifications.
-* **Background Processing:** Utilizes Serverless Redis and BullMQ to offload heavy asynchronous tasks (like generating blog summaries) to a background worker.
+* **Background Processing (Bonus):** Utilizes Serverless Redis and BullMQ to offload heavy asynchronous tasks (like generating blog summaries) to a background worker.
+* **Enterprise Reliability (Bonus):** Global API rate-limiting via `@nestjs/throttler` to prevent DDoS attacks, and structured JSON logging via `nestjs-pino` for production-grade observability.
 
 
 ## 🛠️ Tech Stack
@@ -36,6 +37,7 @@ A modern, full-stack blogging platform built for speed, scalability, and excepti
 * **Cache & Message Queue:** Serverless Redis (Hosted on **Upstash**)
 * Prisma ORM
 * Passport.js & JWT (Authentication)
+* **Security & Observability:** `@nestjs/throttler` (Rate Limiting) & `nestjs-pino` (Structured Logging)
 
 
 ## 📂 Project Structure
@@ -148,10 +150,8 @@ The application will be available at `http://localhost:3001`.
 ## 🔮 What I Would Improve
 
 If given more time, I would implement the following enhancements:
-1. **Rate Limiting:** Integrate `@nestjs/throttler` to protect the public feed and authentication endpoints against brute-force/DDoS attacks.
-2. **Enhanced Security:** Move the JWT from `localStorage` to strict, cross-domain `HttpOnly` cookies, and implement a short-lived Access Token + rotating Refresh Token strategy.
-3. **Structured Logging:** Replace standard console logs with a structured logger like `Pino` or `Winston` to allow for proper log aggregation and monitoring in production environments.
-4. **Advanced Pagination:** Add infinite-scroll cursor pagination for comments and dashboard items (currently, pagination is only implemented on the public feed).
+1. **Enhanced Security:** Move the JWT from `localStorage` to strict, cross-domain `HttpOnly` cookies, and implement a short-lived Access Token + rotating Refresh Token strategy.
+2. **Advanced Pagination:** Add infinite-scroll cursor pagination for comments and dashboard items (currently, pagination is only implemented on the public feed).
 
 
 ## 📈 Scaling to 1 Million Users
