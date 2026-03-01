@@ -31,6 +31,17 @@ export class BlogsController {
     return this.blogsService.getPublicFeed(+page, +limit);
   }
 
+  @Get(':id/comments')
+  async getComments(@Param('id') id: string) {
+    return this.blogsService.getComments(id); // Make sure your service has this method!
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post(':id/comments')
+  async addComment(@Param('id') id: string, @Body('content') content: string, @Req() req: any) {
+    return this.blogsService.addComment(id, req.user.userId, content);
+  }
+
   @Get('public/:slug')
   async getPublicBlogBySlug(@Param('slug') slug: string) {
     return this.blogsService.getPublicBlogBySlug(slug);

@@ -129,4 +129,32 @@ export class BlogsService {
       return { message: 'Liked successfully' };
     }
   }
+
+  async getComments(blogId: string) {
+    return this.prisma.comment.findMany({
+      where: { blogId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { email: true } },
+      },
+    });
+  }
+
+  async addComment(blogId: string, userId: string, content: string) {
+    const blog = await this.prisma.blog.findUnique({ where: { id: blogId } });
+    if (!blog) {
+      throw new NotFoundException('Blog not found.');
+    }
+
+    return this.prisma.comment.create({
+      data: {
+        content,
+        blogId,
+        userId,
+      },
+      include: {
+        user: { select: { email: true } },
+      },
+    });
+  }
 }
