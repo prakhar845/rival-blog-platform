@@ -17,7 +17,6 @@ export default function RootLayout({
   const pathname = usePathname();
   const router = useRouter();
 
-  
   useEffect(() => {
     const checkAuth = setTimeout(() => {
       const token = localStorage.getItem("token");
@@ -27,7 +26,6 @@ export default function RootLayout({
     return () => clearTimeout(checkAuth);
   }, [pathname]);
 
-  
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsLoggedIn(false);
@@ -41,6 +39,7 @@ export default function RootLayout({
         <meta name="description" content="A modern full-stack blogging platform" />
       </head>
       <body className={inter.className}>
+        
         {}
         <nav className="bg-white border-b border-gray-200 shadow-sm p-4">
           <div className="max-w-6xl mx-auto flex justify-between items-center px-4">
@@ -49,9 +48,13 @@ export default function RootLayout({
               RivalBlogs
             </Link>
 
+            {}
             <div className="flex gap-6 items-center">
               {isLoggedIn ? (
                 <>
+                  <Link href="/" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition">
+                    Home
+                  </Link>
                   <Link href="/dashboard" className="text-sm font-semibold text-gray-600 hover:text-gray-900 transition">
                     Dashboard
                   </Link>

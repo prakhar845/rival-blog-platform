@@ -47,17 +47,22 @@ export default function BlogCard({ blog, isDashboard, onTogglePublish, onDelete,
     }
 
     try {
-      
       const res = await fetch(`${API_URL}/blogs/${blog.id}/like`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
       
       if (res.ok) {
-        setLikes((prev: number) => prev + 1);
+        const data = await res.json();
+        
+        if (data.message === 'Unliked successfully') {
+          setLikes((prev: number) => Math.max(0, prev - 1));
+        } else {
+          setLikes((prev: number) => prev + 1);
+        }
       }
     } catch (error) {
-      console.error("Failed to like blog:", error);
+      console.error("Failed to toggle like:", error);
     }
   };
 
