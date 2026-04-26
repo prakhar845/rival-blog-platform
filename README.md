@@ -144,4 +144,3 @@ To scale this application to handle 1 million active users, I would implement th
 2. **Database Read Replicas:** I would utilize Supabase's Read Replicas. The primary database would handle all write requests (new blogs, likes, comments), while multiple replicas across different regions would handle the massive volume of feed read requests.
 3. **Content Delivery Network (CDN):** Frontend assets and dynamic page generations would be cached across Vercel's global edge network to reduce latency for international users.
 4. **Horizontal Backend Scaling:** The NestJS API is stateless, meaning we can spin up dozens of identical backend instances behind a Load Balancer to distribute incoming traffic evenly.
-```
